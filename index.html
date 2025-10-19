@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pi Number Finder</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background: #f0f0f0;
+        }
+        .container {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2c3e50;
+            text-align: center;
+        }
+        .input-group {
+            margin: 20px 0;
+        }
+        input, button, select {
+            padding: 10px;
+            margin: 5px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: #3498db;
+            color: white;
+            border: none;
+            cursor: pointer;
+            transition: background 0.3s;
+        }
+        button:hover {
+            background: #2980b9;
+        }
+        #result {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            background: #f8f9fa;
+        }
+        .progress {
+            margin-top: 10px;
+            height: 20px;
+            background: #eee;
+            border-radius: 10px;
+            overflow: hidden;
+        }
+        .progress-bar {
+            width: 0%;
+            height: 100%;
+            background: #2ecc71;
+            transition: width 0.3s;
+        }
+        .stats {
+            display: flex;
+            justify-content: space-around;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+        .stat-box {
+            background: #fff;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+            text-align: center;
+            margin: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Pi Number Finder</h1>
+        
+        <div class="input-group">
+            <select id="searchType">
+                <option value="number">Sayı Ara</option>
+                <option value="range">Aralık Göster</option>
+            </select>
+        </div>
+
+        <div id="numberSearch">
+            <div class="input-group">
+                <input type="text" id="searchNumber" placeholder="Aramak istediğiniz sayı">
+                <button onclick="searchNumber()">Ara</button>
+            </div>
+        </div>
+
+        <div id="rangeSearch" style="display:none">
+            <div class="input-group">
+                <input type="number" id="startPos" placeholder="Başlangıç pozisyonu">
+                <input type="number" id="endPos" placeholder="Bitiş pozisyonu">
+                <button onclick="showRange()">Göster</button>
+            </div>
+        </div>
+
+        <div class="stats">
+            <div class="stat-box">
+                <div>Aranan Basamak</div>
+                <div id="digitsSearched">0</div>
+            </div>
+            <div class="stat-box">
+                <div>Hız (basamak/sn)</div>
+                <div id="searchSpeed">0</div>
+            </div>
+            <div class="stat-box">
+                <div>Geçen Süre</div>
+                <div id="timeElapsed">0s</div>
+            </div>
+        </div>
+
+        <div class="progress">
+            <div class="progress-bar" id="progressBar"></div>
+        </div>
+
+        <div id="result"></div>
+    </div>
+
+    <script>
+        let searchInterval;
+        let startTime;
+        let digitsSearched = 0;
+
+        document.getElementById('searchType').addEventListener('change', function() {
+            document.getElementById('numberSearch').style.display = 
+                this.value === 'number' ? 'block' : 'none';
+            document.getElementById('rangeSearch').style.display = 
+                this.value === 'range' ? 'block' : 'none';
+        });
+
+        function searchNumber() {
+            const number = document.getElementById('searchNumber').value;
+            if (!number) {
+                alert('Lütfen bir sayı girin!');
+                return;
+            }
+
+            // Arama simülasyonu başlat
+            startTime = Date.now();
+            digitsSearched = 0;
+            document.getElementById('result').innerHTML = 'Aranıyor...';
+            
+            if (searchInterval) clearInterval(searchInterval);
+            
+            searchInterval = setInterval(() => {
+                digitsSearched += 1000000; // Her saniye 1 milyon basamak
+                updateStats();
+
+                // Rastgele bir zamanda bulundu simülasyonu
+                if (Math.random() < 0.1) { // %10 şans
+                    clearInterval(searchInterval);
+                    const position = Math.floor(Math.random() * digitsSearched) + 1;
+                    document.getElementById('result').innerHTML = `
+                        <h3>✨ Bulundu!</h3>
+                        <p>Sayı "${number}" Pi'nin ${position.toLocaleString()}. basamağında bulundu.</p>
+                        <p>Bağlam: ...${Math.random().toString().substr(2,5)}${number}${Math.random().toString().substr(2,5)}...</p>
+                    `;
+                }
+            }, 1000);
+        }
+
+        function showRange() {
+            const start = parseInt(document.getElementById('startPos').value);
+            const end = parseInt(document.getElementById('endPos').value);
+            
+            if (!start || !end || start >= end) {
+                alert('Geçerli bir aralık girin!');
+                return;
+            }
+
+            // Pi'nin ilk 100 basamağı
+            const pi = "14159265358979323846264338327950288419716939937510582097494459230781640628620899862803482534211706";
+            
+            document.getElementById('result').innerHTML = `
+                <h3>📍 ${start}-${end} Arası Basamaklar:</h3>
+                <p>${pi.substring(start-1, end)}</p>
+            `;
+        }
+
+        function updateStats() {
+            const timeElapsed = (Date.now() - startTime) / 1000;
+            const speed = Math.floor(digitsSearched / timeElapsed);
+            
+            document.getElementById('digitsSearched').textContent = digitsSearched.toLocaleString();
+            document.getElementById('searchSpeed').textContent = speed.toLocaleString();
+            document.getElementById('timeElapsed').textContent = `${timeElapsed.toFixed(1)}s`;
+            
+            // Progress bar güncelle (örnek olarak 100M basamağa göre)
+            const progress = Math.min((digitsSearched / 100000000) * 100, 100);
+            document.getElementById('progressBar').style.width = `${progress}%`;
+        }
+    </script>
+</body>
+</html>
